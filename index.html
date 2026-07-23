@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Générateur de signature mail datashake</title>
+<style>
+  :root{
+    --noir:#111;
+    --gris:#5f6368;
+    --gris-clair:#b8b8b8;
+    --bg:#f4f4f5;
+    --card:#ffffff;
+    --bord:#e4e4e7;
+    --accent:#111;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+    background:var(--bg);
+    color:var(--noir);
+    line-height:1.5;
+  }
+  header{
+    padding:28px 32px 20px;
+    border-bottom:1px solid var(--bord);
+    background:var(--card);
+  }
+  header img{display:block;height:26px;width:auto;margin-bottom:14px}
+  header h1{font-size:20px;margin:0 0 4px;font-weight:600}
+  header p{margin:0;color:var(--gris);font-size:14px}
+  .wrap{
+    max-width:1080px;
+    margin:0 auto;
+    padding:28px 32px 60px;
+    display:grid;
+    grid-template-columns:minmax(300px,380px) 1fr;
+    gap:32px;
+    align-items:start;
+  }
+  @media(max-width:820px){.wrap{grid-template-columns:1fr}}
+  .panel{
+    background:var(--card);
+    border:1px solid var(--bord);
+    border-radius:12px;
+    padding:24px;
+  }
+  .panel h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--gris);margin:0 0 18px}
+  label{display:block;font-size:13px;font-weight:600;margin:0 0 6px}
+  .field{margin-bottom:18px}
+  .field .hint{font-weight:400;color:var(--gris);font-size:12px;margin:2px 0 0}
+  input[type=text]{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--gris-clair);
+    border-radius:8px;
+    font-size:14px;
+    font-family:inherit;
+  }
+  input:focus{outline:none;border-color:var(--noir);box-shadow:0 0 0 3px rgba(0,0,0,.06)}
+  .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+  button{
+    font-family:inherit;font-size:14px;font-weight:600;
+    padding:11px 18px;border-radius:8px;border:1px solid var(--noir);
+    cursor:pointer;transition:.15s;
+  }
+  .btn-primary{background:var(--noir);color:#fff}
+  .btn-primary:hover{opacity:.85}
+  .btn-secondary{background:#fff;color:var(--noir)}
+  .btn-secondary:hover{background:#f4f4f5}
+  .preview-label{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--gris);margin:0 0 14px}
+  .preview-box{
+    background:#fff;
+    border:1px solid var(--bord);
+    border-radius:12px;
+    padding:28px;
+    overflow-x:auto;
+  }
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--noir);color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;
+    opacity:0;pointer-events:none;transition:.25s;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .note{font-size:12px;color:var(--gris);margin-top:14px;line-height:1.5}
+</style>
+</head>
+<body>
+<header>
+  <img src="https://lh3.googleusercontent.com/d/18AwxfU50SJx3AF2yCVmSQ0dy_p5PrYTG=w280" alt="datashake">
+  <h1>Générateur de signature mail</h1>
+  <p>Renseigne tes infos, puis copie la signature ou télécharge le HTML.</p>
+</header>
+
+<div class="wrap">
+  <div class="panel">
+    <h2>Tes informations</h2>
+    <div class="field">
+      <label for="nom">Nom</label>
+      <input type="text" id="nom" placeholder="Prénom Nom" value="">
+    </div>
+    <div class="field">
+      <label for="titre">Titre / poste</label>
+      <input type="text" id="titre" placeholder="Consultant SEO" value="">
+    </div>
+    <div class="field">
+      <label for="tel">Téléphone FR <span style="font-weight:400;color:var(--gris)">(optionnel)</span></label>
+      <input type="text" id="tel" placeholder="+ 33 (0) 6 12 34 56 78" value="">
+      <p class="hint">Laisse vide pour n'afficher que le numéro US.</p>
+    </div>
+    <div class="field">
+      <label for="linkedin">Lien LinkedIn <span style="font-weight:400;color:var(--gris)">(optionnel)</span></label>
+      <input type="text" id="linkedin" placeholder="https://www.linkedin.com/in/..." value="">
+    </div>
+
+    <div class="actions">
+      <button class="btn-primary" id="copyBtn">Copier la signature</button>
+      <button class="btn-secondary" id="dlBtn">Télécharger le HTML</button>
+    </div>
+    <p class="note">
+      Fixe (commun à toute l'équipe) : le logo, datashake.fr, l'adresse Paris + New York et le numéro US.<br>
+      Pour coller dans Gmail : clique "Copier la signature", puis dans Gmail &gt; Paramètres &gt; Signature, colle (Cmd+V).
+    </p>
+  </div>
+
+  <div>
+    <p class="preview-label">Aperçu</p>
+    <div class="preview-box">
+      <div id="preview"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const LOGO = "https://lh3.googleusercontent.com/d/18AwxfU50SJx3AF2yCVmSQ0dy_p5PrYTG=w280";
+  const US_PHONE = "US : +1 (305) 427-8236 (WhatsApp preferred)";
+  const ADDRESS = "2 rue de Choiseul, 75002 Paris, France | 60 Broad St #3502, New York, NY 10004";
+
+  const $ = id => document.getElementById(id);
+
+  function esc(s){
+    return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  // Construit le tableau HTML de la signature (contenu à coller / télécharger)
+  function buildSignature(){
+    const nom = esc($("nom").value.trim()) || "Prénom Nom";
+    const titre = esc($("titre").value.trim()) || "Titre";
+    const tel = esc($("tel").value.trim());
+    const linkedin = $("linkedin").value.trim();
+
+    const phoneLine = tel ? ("FR : " + tel + " | " + US_PHONE) : US_PHONE;
+
+    const linkedinLine = linkedin
+      ? '<div><a href="' + esc(linkedin) + '" style="color:#5f6368;text-decoration:underline;">LinkedIn</a></div>'
+      : '';
+
+    return '' +
+'<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;">' +
+'<tr>' +
+'<td style="vertical-align:middle;padding-right:18px;">' +
+'<img src="' + LOGO + '" width="140" height="22" alt="datashake" style="display:block;width:140px;height:auto;max-width:140px;border:0;">' +
+'</td>' +
+'<td style="vertical-align:middle;border-left:1px solid #b8b8b8;padding-left:18px;">' +
+'<div style="font-size:13px;line-height:1.35;color:#5f6368;">' +
+'<div style="font-size:13px;font-weight:400;color:#5f6368;">' + nom + '</div>' +
+'<div>' + titre + '</div>' +
+'<div><a href="https://datashake.fr" style="color:#5f6368;text-decoration:underline;">datashake.fr</a></div>' +
+'<div>' + ADDRESS + '</div>' +
+'<div>' + phoneLine + '</div>' +
+linkedinLine +
+'</div>' +
+'</td>' +
+'</tr>' +
+'</table>';
+  }
+
+  function fullHtmlDoc(sig){
+    return '<!DOCTYPE html>\n<html lang="fr">\n<head><meta charset="UTF-8"></head>\n<body style="margin:24px;background:#fff;">\n' + sig + '\n</body>\n</html>\n';
+  }
+
+  function render(){
+    $("preview").innerHTML = buildSignature();
+  }
+
+  function toast(msg){
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(()=>t.classList.remove("show"), 2200);
+  }
+
+  // Copie le rendu formaté (text/html + text/plain) pour un collage direct dans Gmail
+  async function copySignature(){
+    const sig = buildSignature();
+    const plain = $("preview").innerText;
+    try{
+      const item = new ClipboardItem({
+        "text/html": new Blob([sig], {type:"text/html"}),
+        "text/plain": new Blob([plain], {type:"text/plain"})
+      });
+      await navigator.clipboard.write([item]);
+      toast("Signature copiée, colle-la dans Gmail");
+    }catch(e){
+      // Fallback : sélection du rendu + execCommand
+      const range = document.createRange();
+      range.selectNode($("preview"));
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      try{
+        document.execCommand("copy");
+        toast("Signature copiée, colle-la dans Gmail");
+      }catch(err){
+        toast("Copie impossible, utilise Télécharger le HTML");
+      }
+      sel.removeAllRanges();
+    }
+  }
+
+  function downloadHtml(){
+    const sig = buildSignature();
+    const blob = new Blob([fullHtmlDoc(sig)], {type:"text/html"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const nom = ($("nom").value.trim() || "signature").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+    a.href = url;
+    a.download = "signature-datashake-" + nom + ".html";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast("HTML téléchargé");
+  }
+
+  ["nom","titre","tel","linkedin"].forEach(id => $(id).addEventListener("input", render));
+  $("copyBtn").addEventListener("click", copySignature);
+  $("dlBtn").addEventListener("click", downloadHtml);
+  render();
+</script>
+</body>
+</html>
