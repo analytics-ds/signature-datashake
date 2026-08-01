@@ -97,7 +97,7 @@
 <header>
   <img src="https://lh3.googleusercontent.com/d/18AwxfU50SJx3AF2yCVmSQ0dy_p5PrYTG=w280" alt="datashake">
   <h1>Générateur de signature mail</h1>
-  <p>Renseigne tes infos, puis copie la signature ou télécharge le HTML.</p>
+  <p>Renseigne tes infos, puis télécharge le HTML et suis le guide pour l'installer dans Gmail.</p>
 </header>
 
 <div class="wrap">
@@ -122,8 +122,7 @@
     </div>
 
     <div class="actions">
-      <button class="btn-primary" id="copyBtn">Copier la signature</button>
-      <button class="btn-secondary" id="dlBtn">Télécharger le HTML</button>
+      <button class="btn-primary" id="dlBtn">Télécharger le HTML</button>
     </div>
   </div>
 
@@ -210,34 +209,6 @@ linkedinLine +
     setTimeout(()=>t.classList.remove("show"), 2200);
   }
 
-  // Copie le rendu formaté (text/html + text/plain) pour un collage direct dans Gmail
-  async function copySignature(){
-    const sig = buildSignature();
-    const plain = $("preview").innerText;
-    try{
-      const item = new ClipboardItem({
-        "text/html": new Blob([sig], {type:"text/html"}),
-        "text/plain": new Blob([plain], {type:"text/plain"})
-      });
-      await navigator.clipboard.write([item]);
-      toast("Signature copiée, colle-la dans Gmail");
-    }catch(e){
-      // Fallback : sélection du rendu + execCommand
-      const range = document.createRange();
-      range.selectNode($("preview"));
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-      try{
-        document.execCommand("copy");
-        toast("Signature copiée, colle-la dans Gmail");
-      }catch(err){
-        toast("Copie impossible, utilise Télécharger le HTML");
-      }
-      sel.removeAllRanges();
-    }
-  }
-
   function downloadHtml(){
     const sig = buildSignature();
     const blob = new Blob([fullHtmlDoc(sig)], {type:"text/html"});
@@ -254,7 +225,6 @@ linkedinLine +
   }
 
   ["nom","titre","tel","linkedin"].forEach(id => $(id).addEventListener("input", render));
-  $("copyBtn").addEventListener("click", copySignature);
   $("dlBtn").addEventListener("click", downloadHtml);
   render();
 </script>
