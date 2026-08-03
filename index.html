@@ -89,8 +89,11 @@
   .guide ol{margin:0;padding-left:20px}
   .guide li{font-size:14px;margin-bottom:9px;color:#333}
   .guide strong{font-weight:600}
-  .guide .tuto{width:100%;max-width:100%;display:block;border:1px solid var(--bord);border-radius:12px;margin-top:18px}
+  .guide .tuto{width:100%;max-width:100%;display:block;border:1px solid var(--bord);border-radius:12px;margin-top:18px;cursor:zoom-in}
   .guide .tuto-cap{font-size:12px;color:var(--gris);margin:16px 0 0}
+  .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:1000;padding:24px;cursor:zoom-out}
+  .lightbox.show{display:flex}
+  .lightbox img{max-width:95%;max-height:95%;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
 </style>
 </head>
 <body>
@@ -142,17 +145,18 @@
         <li>Dans Gmail, va dans <strong>Paramètres &gt; Voir tous les paramètres &gt; Signature</strong>.</li>
         <li>Colle (Cmd+V) dans le champ de la signature, puis enregistre les modifications en bas de page.</li>
       </ol>
-      <p class="tuto-cap">Tuto en vidéo :</p>
-      <img class="tuto" src="tuto-gmail.gif" alt="Tutoriel installation de la signature dans Gmail" loading="lazy">
+      <p class="tuto-cap">Tuto en vidéo (clique pour agrandir) :</p>
+      <img class="tuto" id="tutoImg" src="tuto-gmail.gif" alt="Tutoriel installation de la signature dans Gmail" loading="lazy">
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
+<div class="lightbox" id="lightbox"><img src="tuto-gmail.gif" alt="Tutoriel installation de la signature dans Gmail"></div>
+
 <script>
   const LOGO = "https://lh3.googleusercontent.com/d/18AwxfU50SJx3AF2yCVmSQ0dy_p5PrYTG=w280";
-  const US_PHONE = "US : +1 (305) 427-8236 (WhatsApp preferred)";
   const ADDRESS = "2 rue de Choiseul, 75002 Paris, France | 60 Broad St #3502, New York, NY 10004";
 
   const $ = id => document.getElementById(id);
@@ -168,7 +172,7 @@
     const tel = esc($("tel").value.trim());
     const linkedin = $("linkedin").value.trim();
 
-    const phoneLine = tel ? ("FR : " + tel + " | " + US_PHONE) : US_PHONE;
+    const phoneLine = tel ? ('<div>FR : ' + tel + '</div>') : '';
 
     const linkedinLine = linkedin
       ? '<div><a href="' + esc(linkedin) + '" style="color:#5f6368;text-decoration:underline;">LinkedIn</a></div>'
@@ -186,7 +190,7 @@
 '<div>' + titre + '</div>' +
 '<div><a href="https://datashake.fr" style="color:#5f6368;text-decoration:underline;">datashake.fr</a></div>' +
 '<div>' + ADDRESS + '</div>' +
-'<div>' + phoneLine + '</div>' +
+phoneLine +
 linkedinLine +
 '</div>' +
 '</td>' +
@@ -226,6 +230,8 @@ linkedinLine +
 
   ["nom","titre","tel","linkedin"].forEach(id => $(id).addEventListener("input", render));
   $("dlBtn").addEventListener("click", downloadHtml);
+  $("tutoImg").addEventListener("click", () => $("lightbox").classList.add("show"));
+  $("lightbox").addEventListener("click", () => $("lightbox").classList.remove("show"));
   render();
 </script>
 </body>
